@@ -1,0 +1,36 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Deploy Command",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "ts-node",
+            "runtimeArgs": [
+                "deploy.ts"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/test/fixtures",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
+            "name": "Remove Command",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "ts-node",
+            "runtimeArgs": [
+                "remove.ts"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/test/fixtures",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        }
+    ]
+}
