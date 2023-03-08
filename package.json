@@ -33,6 +33,7 @@
     "@huaweicloud/huaweicloud-sdk-core": "^3.1.18",
     "@huaweicloud/huaweicloud-sdk-functiongraph": "^3.1.18",
     "@huaweicloud/huaweicloud-sdk-iam": "^3.1.18",
+    "@serverless/utils": "^6.8.2",
     "compressing": "^1.6.3",
     "ini": "^3.0.1",
     "lodash": "^4.17.21",

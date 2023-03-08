@@ -12,6 +12,7 @@ import {
     UpdateFunctionCodeRequestBody,
     UpdateFunctionCodeRequestBodyCodeTypeEnum
 } from "@huaweicloud/huaweicloud-sdk-functiongraph";
+import {log} from '@serverless/utils/log';
 import _ from 'lodash';
 import { IFunctionProps } from "../models/interface";
 import { startZip } from "../utils/util";
@@ -68,6 +69,7 @@ export class FunctionService {
      */
     async remove() {
         try {
+            log.notice(`Start remove function ${this.functionInfo.func_name}.`);
             const request = new DeleteFunctionRequest().withFunctionUrn(this.getNoVersionUrn());
             const result = await this.client.deleteFunction(request);
             return this.handerResult(result, this.logMap.deleteFunction);
@@ -85,6 +87,7 @@ export class FunctionService {
      * @returns 
      */
     private async create() {
+        log.notice(`Start creating function ${this.functionInfo.func_name}.`);
         const zipFile = await startZip(this.functionInfo.code.codeUri);
         const body = new CreateFunctionRequestBody()
             .withFuncName(this.functionInfo.func_name)
@@ -116,6 +119,7 @@ export class FunctionService {
      * @returns 
      */
     private async updateCode() {
+        log.notice(`start update the code of function ${this.functionInfo.func_name}.`);
         const zipFile = await startZip(this.functionInfo.code.codeUri);
         const body = new UpdateFunctionCodeRequestBody()
             .withCodeType(UpdateFunctionCodeRequestBodyCodeTypeEnum.ZIP)
@@ -218,8 +222,10 @@ export class FunctionService {
     private handerResult(result: any = {}, type: { success: string; failed: string }) {
         const { httpStatusCode, errorMsg, errorCode } = result;
         if (httpStatusCode >= 200 && httpStatusCode < 300 || errorCode === "FSS.0409") {
+            log.success(type.success.replace('{name}', this.functionInfo.func_name));
             return result;
         }
+        log.error(`${type.failed.replace('{name}', this.functionInfo.func_name)} result = ${JSON.stringify(result)}`);
         throw new Error(JSON.stringify({ errorMsg, errorCode }));
     }
 

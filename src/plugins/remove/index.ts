@@ -1,4 +1,5 @@
 import Serverless, { Options } from "serverless";
+import {log} from '@serverless/utils/log';
 import { BasePlugin } from '../basePlugin';
 
 export class RemovePlugin extends BasePlugin {
@@ -10,9 +11,15 @@ export class RemovePlugin extends BasePlugin {
     }
 
     private async remove() {
-        const ins = await this.getIns();
-        for (let i = 0; i < ins.length; i++) {
-            await ins[i].remove();
+        log.notice('Start remove functions.');
+        try {
+            const ins = await this.getIns();
+            for (let i = 0; i < ins.length; i++) {
+                await ins[i].remove();
+            }
+            log.success('Remove success.');
+        } catch(err) {
+            log.error('Remove error.');
         }
     }
 }

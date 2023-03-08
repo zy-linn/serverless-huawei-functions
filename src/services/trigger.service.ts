@@ -10,6 +10,7 @@ import {
     UpdateTriggerRequestBody,
     UpdateTriggerRequestTriggerTypeCodeEnum,
 } from "@huaweicloud/huaweicloud-sdk-functiongraph";
+import {log} from '@serverless/utils/log';
 import { IEventData, ITrigger } from "../models/interface";
 import { isString, randomLenChar } from "../utils/util";
 import { ApigClient } from "../clients/apig.client";
@@ -44,7 +45,7 @@ export class TriggerService {
      * @returns 
      */
     async deploy() {
-        this.spin.info(`Start deploy ${this.triggerType.getType()} trigger.`);
+        log.notice(`Start deploy ${this.triggerType.getType()} trigger.`);
         try {
             const trigger = await this.getTrigger();
             if (trigger) {
@@ -69,7 +70,7 @@ export class TriggerService {
      */
     async remove() {
         const triggerType = this.triggerType.getType();
-        this.spin.info(`Start delete ${triggerType} trigger.`);
+        log.notice(`Start delete ${triggerType} trigger.`);
         try {
             const trigger = await this.getTrigger();
             if (!trigger) { // 触发器
@@ -201,9 +202,10 @@ export class TriggerService {
         const { httpStatusCode, errorMsg, errorCode } = result;
         const triggerType = this.triggerType.getType();
         if (httpStatusCode >= 200 && httpStatusCode < 300) {
-            showLog && this.spin.succeed(type?.success.replace('{name}', triggerType));
+            showLog && log.success(type?.success.replace('{name}', triggerType));
             return result;
         }
+        showLog && log.error(type?.failed.replace('{name}', triggerType));
         throw new Error(JSON.stringify({ errorMsg, errorCode }));
     }
 }

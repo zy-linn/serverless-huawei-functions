@@ -59,7 +59,11 @@ export default class Provider {
         if (this[FG_CLIENT_SYMBOL]) {
             return this[FG_CLIENT_SYMBOL];
         }
-        const projectId = await new IamClient().build(this[KEY_SYMBOL]).getProject(this.region);
-        return new FunctionClient().build(this[KEY_SYMBOL], this.region, projectId);
+        try {
+            const projectId = await new IamClient().build(this[KEY_SYMBOL]).getProject(this.region);
+            return new FunctionClient().build(this[KEY_SYMBOL], this.region, projectId);
+        } catch (error) {
+            throw new Error('get client error');
+        }
     }
 }
