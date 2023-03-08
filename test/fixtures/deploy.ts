@@ -5,7 +5,7 @@ import HuaweiIndex from '../../src/index';
     try {
         const serverless: any = MockFactory.createTestServerless({
             configuration: { 
-            service: "fg-nodejs",
+                service: "fg-nodejs",
                 frameworkVersion: "3",
                 provider: {
                     name: "huawei",

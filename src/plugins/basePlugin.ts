@@ -21,7 +21,7 @@ export class BasePlugin {
             return new FunctionService(client.getFunctionClient(), {
                 ...basicConfig,
                 ...functions[key],
-                projectId: client.getProjectId
+                projectId: client.getProjectId()
             });
         });
     }

@@ -12,6 +12,7 @@ import {
     UpdateFunctionCodeRequestBody,
     UpdateFunctionCodeRequestBodyCodeTypeEnum
 } from "@huaweicloud/huaweicloud-sdk-functiongraph";
+import _ from 'lodash';
 import { IFunctionProps } from "../models/interface";
 import { startZip } from "../utils/util";
 
@@ -155,7 +156,7 @@ export class FunctionService {
             memory_size: props.memorySize || 256,
             timeout: props.timeout || 30,
             runtime: props.runtime || 'Node.js14.18',
-            package: props.package || 'default',
+            package: _.isEmpty(props.package) ? 'default' : props.package,
             code_type: 'zip',
             description: props.description || '',
             code: {
