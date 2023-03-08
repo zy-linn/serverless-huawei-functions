@@ -69,7 +69,7 @@ export class FunctionService {
      */
     async remove() {
         try {
-            log.notice(`Start remove function ${this.functionInfo.func_name}.`);
+            log.notice(`Start delete function ${this.functionInfo.func_name}.`);
             const request = new DeleteFunctionRequest().withFunctionUrn(this.getNoVersionUrn());
             const result = await this.client.deleteFunction(request);
             return this.handerResult(result, this.logMap.deleteFunction);

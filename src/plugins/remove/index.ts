@@ -11,13 +11,11 @@ export class RemovePlugin extends BasePlugin {
     }
 
     private async remove() {
-        log.notice('Start remove functions.');
         try {
             const ins = await this.getIns();
             for (let i = 0; i < ins.length; i++) {
                 await ins[i].remove();
             }
-            log.success('Remove success.');
         } catch(err) {
             log.error('Remove error.');
         }

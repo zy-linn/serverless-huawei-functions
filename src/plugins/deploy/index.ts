@@ -10,13 +10,11 @@ export class DeployPlugin extends BasePlugin {
     }
 
     private async deploy() {
-        log.notice('Start deploy functions.');
         try {
             const ins = await this.getIns();
             for (let i = 0; i < ins.length; i++) {
                 await ins[i].deploy();
             }
-            log.success('Deployed success.');
         } catch (error) {
             log.error('Deployed error.');
         }
