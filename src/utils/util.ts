@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as compressing from 'compressing';
 import { ServiceType } from "../models/interface";
+import { merge, omit } from "lodash";
 
 /**
  * 代码转化成base64
@@ -75,4 +76,27 @@ export function randomLenChar(len = 6) {
  */
 export function isString(obj) {
     return typeof obj === 'string';
+}
+
+/**
+ * 处理响应
+ * @param param
+ */
+export function handlerResponse({ httpStatusCode, errorMsg, errorCode }) {
+    if ((httpStatusCode >= 300 || httpStatusCode < 200) && errorCode !== 'FSS.0409')  {
+        throw new Error(errorMsg);
+    }
+}
+
+/**
+ * 扩展函数对象
+ * @param functions 
+ * @returns 
+ */
+export function extendFunctionInfos(functions: any) {
+    if (!functions || !functions.extend) {
+        return functions;
+    }
+    const func = merge({}, functions.extend, functions);
+    return omit(func, ['extend']);
 }

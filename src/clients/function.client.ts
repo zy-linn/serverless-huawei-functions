@@ -3,6 +3,7 @@ import { FunctionGraphClient } from "@huaweicloud/huaweicloud-sdk-functiongraph"
 import { ICredentials, ServiceType } from "../models/interface";
 import { getEndpoint } from "../utils/util";
 import { ApigClient } from "./apig.client";
+import { UserOptions } from "@huaweicloud/huaweicloud-sdk-core/UserOptions";
 
 export class FunctionClient {
 
@@ -13,6 +14,12 @@ export class FunctionClient {
     private projectId: string;
 
     build(credentials: ICredentials, region = 'cn-north-4', projectId = '') {
+        const options: UserOptions = {
+            axiosRequestConfig: {
+                maxBodyLength: Infinity,
+                maxContentLength: Infinity
+            }
+        };
         this.projectId = projectId;
         const basicCredentials = new BasicCredentials()
             .withAk(credentials.AccessKeyID)
@@ -21,10 +28,12 @@ export class FunctionClient {
         this.functionClient = FunctionGraphClient.newBuilder()
             .withCredential(basicCredentials)
             .withEndpoint(getEndpoint(region, ServiceType.FUNCTIONGRAPH))
+            .withOptions(options)
             .build();
         this.apigClient = ApigClient.newBuilder()
             .withCredential(basicCredentials)
             .withEndpoint(getEndpoint(region, ServiceType.APIG))
+            .withOptions(options)
             .build();
         return this;
     }

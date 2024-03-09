@@ -293,7 +293,7 @@ export class Trigger {
      * 获取触发器数据
      * @returns 
      */
-    protected async getEventData(): Promise<IEventData> {
+    protected async getEventData(): Promise<any> {
         return Promise.resolve(this.triggerInfo.event_data);
     };
 

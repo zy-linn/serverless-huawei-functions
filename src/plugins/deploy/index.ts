@@ -11,9 +11,14 @@ export class DeployPlugin extends BasePlugin {
 
     private async deploy() {
         try {
-            const ins = await this.getIns();
-            for (let i = 0; i < ins.length; i++) {
-                await ins[i].deploy();
+            if (this.options.function) {
+                const ins = await this.getFgIns();
+                await ins.deploy();
+            } else {
+                const ins = await this.getIns();
+                for (let i = 0; i < ins.length; i++) {
+                    await ins[i].deploy();
+                }
             }
         } catch (error) {
             log.error('Deployed error.');

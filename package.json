@@ -27,13 +27,15 @@
     "start": "npm run watch",
     "watch": "tsc -w",
     "prebuild": "rimraf dist",
-    "build": "esbuild src/index.ts --bundle --log-level=error --minify --platform=node --format=cjs --target=node14.18 --outfile=dist/index.js"
+    "build": "esbuild src/index.ts --bundle --log-level=error --minify --platform=node --format=cjs --target=node14.18 --outfile=dist/index.js",
+    "postbuild": "node resources/copy.js"
   },
   "dependencies": {
     "@huaweicloud/huaweicloud-sdk-core": "^3.1.18",
     "@huaweicloud/huaweicloud-sdk-functiongraph": "^3.1.18",
     "@huaweicloud/huaweicloud-sdk-iam": "^3.1.18",
     "@serverless/utils": "^6.8.2",
+    "axios": "^1.6.7",
     "compressing": "^1.6.3",
     "ini": "^3.0.1",
     "lodash": "^4.17.21",
