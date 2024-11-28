@@ -22,12 +22,13 @@ export class BasePlugin {
         log.verbose('functions->' + JSON.stringify(functions, null, 4));
         log.verbose('options->' + JSON.stringify(this.options, null, 4));
         const basicConfig = _.omit(provider, ['name', 'credentials', 'stage']);
+        log.verbose('basicConfig->' + JSON.stringify(basicConfig, null, 4));
         return Object.keys(functions).map(key => {
             const config = extendFunctionInfos(functions[key]);
-            log.verbose('functionConfig->' + JSON.stringify(config, null, 4));
             return new FunctionService(client.getFunctionClient(), {
                 ...basicConfig,
                 ...config,
+                package: this.handlerPackage(config, basicConfig),
                 functionName: config.name,
                 service: this.serverless.service.service,
                 version: this.options.qualifier ?? 'latest',
@@ -40,11 +41,14 @@ export class BasePlugin {
         const client = await this.provider.getFgClient();
         const functionObj = this.serverless.service.getFunction(this.options.function);
         const functionConfig = extendFunctionInfos(functionObj);
-        log.verbose('functions->' + JSON.stringify(this.serverless.service.functions));
         log.verbose('options->' + JSON.stringify(this.options, null, 4));
-        log.verbose('functionConfig->' + JSON.stringify(functionConfig, null, 4));
+        log.verbose('function->' + JSON.stringify(functionConfig, null, 4));
+        const basicConfig = _.omit(this.serverless.service.provider ?? {}, ['name', 'credentials', 'stage']);
+        log.verbose('basicConfig->' + JSON.stringify(basicConfig, null, 4));
         return new FunctionService(client.getFunctionClient(), {
+            ...basicConfig,
             ...functionConfig,
+            package: this.handlerPackage(functionConfig, basicConfig),
             functionName: functionConfig.name,
             service: this.serverless.service.service,
             version: this.options.qualifier ?? 'latest',
@@ -62,5 +66,15 @@ export class BasePlugin {
             argsData.eventStdin = true;
         }
         return await new EventService().getEvent(argsData);
+    }
+
+    private handlerPackage(funConfig: any = {}, providerConfig: any = {}) {
+        if (_.isString(funConfig.package)) {
+            return funConfig.package;
+        }
+        if (_.isString(providerConfig.package)) {
+            return providerConfig.package;
+        }
+        return 'default';
     }
 }

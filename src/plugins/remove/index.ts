@@ -17,7 +17,7 @@ export class RemovePlugin extends BasePlugin {
                 await ins[i].remove();
             }
         } catch(err) {
-            log.error('Remove error.');
+            log.error(`Remove error. err=${(err as Error).message}`);
         }
     }
 }

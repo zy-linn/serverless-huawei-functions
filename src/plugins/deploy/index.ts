@@ -21,7 +21,7 @@ export class DeployPlugin extends BasePlugin {
                 }
             }
         } catch (error) {
-            log.error('Deployed error.');
+            log.error(`Deployed error. err=${(error as Error).message}`);
         }
     }
 }

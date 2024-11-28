@@ -1,6 +1,6 @@
 {
   "name": "serverless-huawei-functions",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "Provider plugin for the Serverless Framework which adds support for Huawei Cloud Functions.",
   "autoInstall": false,
   "homepage": "hhttps://github.com/zy-linn/serverless-huawei-functions.git",

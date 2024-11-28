@@ -24,7 +24,7 @@ export class InfoPlugin extends BasePlugin {
             }
             log.notice(serviceMsg);
         } catch(error) {
-            log.error('Info error.');
+            log.error(`Info error. err=${(error as Error).message}`);
         }
     }
 }

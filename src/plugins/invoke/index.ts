@@ -19,7 +19,7 @@ export class InvokePlugin extends BasePlugin {
             const event = await this.getEvent();
             await ins.invoke(event);
         } catch (error) {
-            log.error('Invoke error.');
+            log.error(`Invoke error. err=${(error as Error).message}`);
         }
     }
 }

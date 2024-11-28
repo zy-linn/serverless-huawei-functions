@@ -56,6 +56,7 @@ export class FunctionService {
         public readonly props: any = {},
     ) {
         this.handlerInputs(props);
+        log.verbose(`FunctionService props: ${JSON.stringify(props, null, 4)}`);
     }
 
     /**
@@ -159,7 +160,7 @@ export class FunctionService {
             this.metaData = await this.client.showFunctionConfig(request);
             return this.metaData.httpStatusCode >= 200 && this.metaData.httpStatusCode < 300;
         } catch (err) {
-            throw err;
+            return false;
         }
     }
 
@@ -175,7 +176,7 @@ export class FunctionService {
             memory_size: props.memorySize || 256,
             timeout: props.timeout || 30,
             runtime: props.runtime || 'Node.js14.18',
-            package: _.isEmpty(props.package) ? 'default' : props.package,
+            package: _.isString(props.package) ? props.package : 'default',
             code_type: 'zip',
             description: props.description || '',
             code: {
@@ -257,7 +258,7 @@ export class FunctionService {
     private async create() {
         const body = new CreateFunctionRequestBody()
             .withFuncName(this.props.functionName)
-            .withPackage(this.props.package || "default")
+            .withPackage(this.functionInfo.package)
             .withRuntime(
                 (this.props.runtime as CreateFunctionRequestBodyRuntimeEnum) ||
                 "Node.js14.18"
@@ -456,8 +457,8 @@ export class FunctionService {
         body.withEnterpriseProjectId(
             newData?.enterpriseProjectId ?? oldData?.enterprise_project_id ?? "0"
         );
-        body.withMemorySize(newData?.memorySize ?? oldData.memory_size ?? 128);
-        body.withTimeout(newData?.timeout ?? oldData.timeout ?? 30);
+        body.withMemorySize(newData?.memorySize ?? oldData?.memory_size ?? 128);
+        body.withTimeout(newData?.timeout ?? oldData?.timeout ?? 30);
         body.withHandler(newData?.handler ?? oldData?.handler ?? "index.handler");
         body.withDescription(newData?.description ?? oldData?.description);
     }
@@ -540,8 +541,8 @@ export class FunctionService {
     private setEnvConfig(body: RequestBody, newData: any, oldData?: any) {
         try {
             body.withUserData(
-                JSON.stringify(newData?.userData ?? newData?.environment) ??
-                oldData.user_data ??
+                JSON.stringify(newData?.userData ?? newData?.environment?.variables) ??
+                oldData?.user_data ??
                 "{}"
             );
             if (!this.isUpdate(body, oldData)) {
@@ -568,10 +569,10 @@ export class FunctionService {
     ) {
         const strategyConf = new StrategyConfig();
         strategyConf.withConcurrency(
-            newData.concurreny ?? oldData.strategy_config.concurrency
+            newData.concurreny ?? oldData?.strategy_config.concurrency
         );
         strategyConf.withConcurrentNum(
-            newData.concurrentNum ?? oldData.strategy_config.concurrent_num
+            newData.concurrentNum ?? oldData?.strategy_config.concurrent_num
         );
         body.withStrategyConfig(strategyConf);
     }
