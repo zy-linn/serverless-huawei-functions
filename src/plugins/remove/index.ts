@@ -1,6 +1,6 @@
 import Serverless, { Options } from "serverless";
-import {log} from '@serverless/utils/log';
 import { BasePlugin } from '../basePlugin';
+import { Logger } from "serverless-fgs-sdk";
 
 export class RemovePlugin extends BasePlugin {
     constructor(serverless: Serverless, options: Options) {
@@ -17,7 +17,7 @@ export class RemovePlugin extends BasePlugin {
                 await ins[i].remove();
             }
         } catch(err) {
-            log.error(`Remove error. err=${(err as Error).message}`);
+           Logger.getIns().error(`Remove error. err=${(err as Error).message}`);
         }
     }
 }

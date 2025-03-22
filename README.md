@@ -51,10 +51,17 @@ functions:
     # package: default
     # memorySize: 256
     # timeout: 30
-    # environment:
-    #   variables:
-    #     ENV_FIRST: env1
-    #     ENV_SECOND: env2
+    # userData:
+    #   ENV_FIRST: env1
+    #   ENV_SECOND: env2
+    # events:
+    #   - triggerTypeCode: TIMER
+    #     status: ACTIVE
+    #     eventData: 
+    #       name: Timer-b124
+    #       schedule: 5m
+    #       scheduleType: Rate
+    #       userEvent: hello
 ```
 
 In order to deploy this function, we need the credentials with permissions to access Huawei Function Compute. 
@@ -69,13 +76,27 @@ secret_access_key=xxxxxxxxxxxxxxxxxxxx
 ### Deploy Your Function App
 
 ```bash
+# Deploy functions and events
 $ sls deploy
+
+# Deploy a function directly
+$ sls deploy --param="function=hello"
+
+# Deploy a trigger directly
+$ sls deploy --param="trigger=TIMER"
 ```
 
-### Deleting Your Function App
+### Delete Your Function App
 
 ```bash
+# Delete functions and events
 $ sls remove
+
+# Delete a function directly
+$ sls remove --param="function=hello"
+
+# Delete a trigger directly
+$ sls remove --param="trigger=TIMER"
 ```
 
 

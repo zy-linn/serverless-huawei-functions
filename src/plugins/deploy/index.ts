@@ -1,6 +1,6 @@
 import Serverless, { Options } from "serverless";
-import {log} from '@serverless/utils/log';
 import { BasePlugin } from '../basePlugin';
+import { Logger } from "serverless-fgs-sdk";
 export class DeployPlugin extends BasePlugin {
     constructor(serverless: Serverless, options: Options) {
         super(serverless, options);
@@ -11,17 +11,12 @@ export class DeployPlugin extends BasePlugin {
 
     private async deploy() {
         try {
-            if (this.options.function) {
-                const ins = await this.getFgIns();
-                await ins.deploy();
-            } else {
-                const ins = await this.getIns();
-                for (let i = 0; i < ins.length; i++) {
-                    await ins[i].deploy();
-                }
+            const ins = await this.getIns();
+            for (let i = 0; i < ins.length; i++) {
+                await ins[i].deploy();
             }
         } catch (error) {
-            log.error(`Deployed error. err=${(error as Error).message}`);
+            Logger.getIns().error(`Deployed error. err = ${error}`);
         }
     }
 }

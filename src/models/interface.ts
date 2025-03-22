@@ -208,6 +208,78 @@ export interface IFuncCode {
     link: string;
 }
 
+export enum Auth {
+    IAM = 'IAM',
+    App = 'App',
+    NONE = 'None'
+}
+
+export enum protocol {
+    HTTP = 'HTTP',
+    HTTPS = 'HTTPS'
+}
+
+export enum ScheduleType {
+    RATE = 'Rate',
+    CRON = 'Cron'
+}
+
+export interface IApigProps extends IEventData {
+    name?: string;
+    groupName?: string;
+    auth?: Auth;
+    protocol?: protocol;
+    timeout?: number;
+}
+
+export interface IObsProps extends IEventData {
+    bucket?: string;
+    events?: Array<string>;
+    name?: string;
+    prefix?: string;
+    suffix?: string;
+}
+
+export interface ITimerProps extends IEventData {
+    name?: string;
+    scheduleType?: ScheduleType;
+    schedule?: string;
+    userEvent?: string;
+}
+
+export interface ILtsProps extends IEventData {
+    logGroupId?: string;
+    logTopicId?: string;
+}
+
+export enum TypeCode {
+    APIG = 'APIG',
+    CTS = 'CTS',
+    DDS = 'DDS',
+    DEDICATEDGATEWAY='DEDICATEDGATEWAY',
+    DIS = 'DIS',
+    LTS = 'LTS',
+    KAFKA = 'KAFKA',
+    OPENSOURCEKAFKA = 'OPENSOURCEKAFKA',
+    OBS = 'OBS',
+    RABBITMQ='RABBITMQ',
+    SMN = 'SMN',
+    TIMER = 'TIMER'
+}
+
+export enum TriggerStatus {
+    ACTIVE = 'ACTIVE',
+    DISABLED = 'DISABLED'
+}
+
+export interface ITriggerProps {
+    triggerId?: string;
+    triggerTypeCode: TypeCode; // 触发器类型。
+    status?: string; // 触发器状态，取值为ACTIVE,DISABLED。
+    eventTypeCode?: string; // 消息代码。
+    eventData: IObsProps | ITimerProps | IApigProps | IEventData; // 事件结构体。
+}
+
 export interface ITrigger {
     trigger_id?: string;
     trigger_type_code: string; // 触发器类型。
@@ -217,5 +289,5 @@ export interface ITrigger {
 }
 
 export interface IEventData {
-    [key: string]: string
+    [key: string]: any
 }

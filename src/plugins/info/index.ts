@@ -1,5 +1,5 @@
 import Serverless, { Options } from "serverless";
-import {log} from '@serverless/utils/log';
+import { Logger } from "serverless-fgs-sdk";
 import { BasePlugin } from '../basePlugin';
 
 export class InfoPlugin extends BasePlugin {
@@ -22,9 +22,9 @@ export class InfoPlugin extends BasePlugin {
                     serviceMsg += `\n ${end}`;
                 }
             }
-            log.notice(serviceMsg);
+            Logger.getIns().info(serviceMsg);
         } catch(error) {
-            log.error(`Info error. err=${(error as Error).message}`);
+            Logger.getIns().error(`Info error. err=${(error as Error).message}`);
         }
     }
 }

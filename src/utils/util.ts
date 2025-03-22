@@ -97,6 +97,31 @@ export function extendFunctionInfos(functions: any) {
     if (!functions || !functions.extend) {
         return functions;
     }
-    const func = merge({}, functions.extend, functions);
+    const func = merge({}, functions, functions.extend);
     return omit(func, ['extend']);
 }
+
+/**
+ * 生成函数
+ * @param region 区域
+ * @param projectId 项目ID
+ * @param funPackage 依赖
+ * @param name 函数名
+ * @param tag 版本
+ * @returns 
+ */
+export function handlerUrn(region, projectId, funPackage, name, tag = '') {
+    const urn = `urn:fss:${region}:${projectId}:function:${funPackage}:${name}`;
+    return tag ? `${urn}:${tag}` : urn;
+}
+
+// 下划线转换驼峰
+export function underlineToHump(str = '') {
+    return str.replace(/\_(\w)/g, function(all, letter){
+        return letter.toUpperCase();
+    });
+}
+// 驼峰转换下划线
+export function humpToUnderline(str = '') {
+  return str.replace(/([A-Z])/g,"_$1").toLowerCase();
+}``

@@ -59,7 +59,7 @@ export class ApigClient {
      */
     private sendRequest(options) {
         return new Promise((res, rej) => {
-            this.hcClient.sendRequest(options).then(result => {
+            this.hcClient.sendRequest(options).then((result: any) => {
                 const { httpStatusCode, errorMsg } = result;
                 if (httpStatusCode >= 200 && httpStatusCode < 300) {
                     res(result);

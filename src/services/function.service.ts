@@ -20,11 +20,16 @@ import {
     FuncVpc,
     NetworkControlConfig,
     UpdateFunctionConfigRequest,
+    KvItem,
+    DeleteTagsRequest,
+    UpdateFunctionTagsRequestBody,
+    ListFunctionTagsRequest,
+    CreateTagsRequest,
 } from "@huaweicloud/huaweicloud-sdk-functiongraph";
-import { log } from '@serverless/utils/log';
 import _ from 'lodash';
 import { AdvancedConfig, BasicConfig, ConcurrencyConfig, IFunctionConfig, IFunctionProps, IFunctionResult, LogConfig, NetConfig, PermissionConfig } from "../models/interface";
 import { handlerResponse, startZip } from "../utils/util";
+import { Logger } from "serverless-fgs-sdk";
 
 type RequestBody = UpdateFunctionConfigRequestBody | CreateFunctionRequestBody;
 
@@ -56,7 +61,7 @@ export class FunctionService {
         public readonly props: any = {},
     ) {
         this.handlerInputs(props);
-        log.verbose(`FunctionService props: ${JSON.stringify(props, null, 4)}`);
+        Logger.getIns().debug(`FunctionService props: ${JSON.stringify(props, null, 4)}`);
     }
 
     /**
@@ -68,14 +73,16 @@ export class FunctionService {
     async deploy() {
         try {
             if (
-                (!this.props.agencyName || !this.props.xrole) &&
+                (!this.props.agencyName && !this.props.xrole) &&
                 (this.props.vpcId || this.props.subnetId)
             ) {
-                throw new Error("First configure the function agency in s.yml.");
+                Logger.getIns().error("First configure the function xrole in serverless.yml.");
+                throw new Error("First configure the function xrole in serverless.yml.");
             }
             if (this.props.codeType === "obs" && !this.props.codeUrl) {
+                Logger.getIns().error("First configure the OBS link URL for the function code package in serverless.yml.");
                 throw new Error(
-                    "First configure the OBS link URL for the function code package in s.yml."
+                    "First configure the OBS link URL for the function code package in serverless.yml."
                 );
             }
             const isExist = await this.config();
@@ -94,11 +101,12 @@ export class FunctionService {
      */
     async remove() {
         try {
-            log.notice(`Start delete function ${this.functionInfo.func_name}.\n`);
+            Logger.getIns().spinStart(`Start delete function ${this.functionInfo.func_name}.\n`);
             const request = new DeleteFunctionRequest().withFunctionUrn(this.getNoVersionUrn());
             const result = await this.client.deleteFunction(request);
             return this.handerResult(result, this.logMap.deleteFunction);
         } catch (err) {
+            Logger.getIns().spinStop();
             throw err;
         }
     }
@@ -108,18 +116,19 @@ export class FunctionService {
      * @param event 
      */
     async invoke(event: string) {
-        log.notice(`Start invoking function ${this.functionInfo.func_name}.\n`);
+        Logger.getIns().spinStart(`Start invoking function ${this.functionInfo.func_name}.\n`);
         const request = new InvokeFunctionRequest();
         request.withFunctionUrn(this.functionUrn);
         request.withXCffLogType("tail");
         request.withXCFFRequestVersion("v1");
         request.withBody(JSON.parse(event));
         const result = await this.client.invokeFunction(request);
-        log.notice("========= FGS invoke Logs begin =========");
-        log.notice(result.log);
-        log.notice("========= FGS invoke Logs end =========\n");
-        log.notice(`FGS Invoke Result[code: ${result.status}]`);
-        log.notice(JSON.stringify(JSON.parse(result.result), null, 4));
+        Logger.getIns().spinStop();
+        Logger.getIns().info("========= FGS invoke Logs begin =========");
+        Logger.getIns().info(result.log);
+        Logger.getIns().info("========= FGS invoke Logs end =========\n");
+        Logger.getIns().info(`FGS Invoke Result[code: ${result.status}]`);
+        Logger.getIns().info(JSON.stringify(JSON.parse(result.result), null, 4));
     }
 
     /**
@@ -129,11 +138,11 @@ export class FunctionService {
     async info() {
         const funcMsg = `- ${this.functionInfo.func_name}\n   runtime: ${this.functionInfo.runtime}\n   handler: ${this.functionInfo.handler}\n   Endpoints`;
         try {
-            log.notice(`Start get function ${this.functionInfo.func_name}.\n`);
+            Logger.getIns().debug(`Start get function ${this.functionInfo.func_name}.\n`);
             const request = new ListFunctionTriggersRequest();
             request.withFunctionUrn(this.functionUrn);
             const result: any = await this.client.listFunctionTriggers(request);
-            log.verbose(`result->` + JSON.stringify(result, null, 4));
+            Logger.getIns().debug(`result->` + JSON.stringify(result, null, 4));
             let apimsg = '';
             result.filter(t => ['DEDICATEDGATEWAY', 'APIG'].includes(t.trigger_type_code) && t.trigger_status === 'ACTIVE').forEach(t => {
                 apimsg += `   - ${t.event_data.api_name}\n      ${t.event_data.req_method} ${t.event_data.invoke_url}`
@@ -141,6 +150,8 @@ export class FunctionService {
             return `${funcMsg} \n ${apimsg}`;
         } catch (err) {
             return `${funcMsg} \n     There are no endpoints yet.\n`;
+        } finally {
+            Logger.getIns().spinStop();
         }
 
     }
@@ -169,14 +180,13 @@ export class FunctionService {
      * @param props 
      */
     private async handlerInputs(props: any = {}) {
-        const { region, projectId, version, name } = props;
         this.functionInfo = {
-            func_name: name,
+            func_name: props.name,
             handler: props.handler || 'index.handler',
             memory_size: props.memorySize || 256,
             timeout: props.timeout || 30,
             runtime: props.runtime || 'Node.js14.18',
-            package: _.isString(props.package) ? props.package : 'default',
+            package: props.package,
             code_type: 'zip',
             description: props.description || '',
             code: {
@@ -184,7 +194,7 @@ export class FunctionService {
             },
             user_data: JSON.stringify(props.environment || {})
         };
-        this.functionUrn = this.handlerUrn(region, projectId, this.functionInfo.package, name, version);
+        this.functionUrn = props.urn;
     }
 
     /**
@@ -217,18 +227,6 @@ export class FunctionService {
     }
 
     /**
-     * 封装URN
-     * @param region 
-     * @param projectId 
-     * @param funPackage 
-     * @param name 
-     * @returns 
-     */
-    private handlerUrn(region, projectId, funPackage, name, version = 'latest') {
-        return `urn:fss:${region}:${projectId}:function:${funPackage}:${name}:${version}`;
-    }
-
-    /**
      * 处理函数结果
      * FSS.0409 代码没有更新
      * @param result 处理结果
@@ -238,10 +236,10 @@ export class FunctionService {
     private handerResult(result: any = {}, type: { success: string; failed: string }) {
         const { httpStatusCode, errorMsg, errorCode } = result;
         if (httpStatusCode >= 200 && httpStatusCode < 300 || errorCode === "FSS.0409") {
-            log.success(type.success.replace('{name}', this.functionInfo.func_name));
+            Logger.getIns().spinSuccess(type.success.replace('{name}', this.functionInfo.func_name));
             return result;
         }
-        log.error(`${type.failed.replace('{name}', this.functionInfo.func_name)} result = ${JSON.stringify(result)}`);
+        Logger.getIns().spinError(`${type.failed.replace('{name}', this.functionInfo.func_name)} result = ${JSON.stringify(result)}`);
         throw new Error(JSON.stringify({ errorMsg, errorCode }));
     }
 
@@ -257,7 +255,7 @@ export class FunctionService {
    */
     private async create() {
         const body = new CreateFunctionRequestBody()
-            .withFuncName(this.props.functionName)
+            .withFuncName(this.props.name)
             .withPackage(this.functionInfo.package)
             .withRuntime(
                 (this.props.runtime as CreateFunctionRequestBodyRuntimeEnum) ||
@@ -284,9 +282,9 @@ export class FunctionService {
             const zipFile = await startZip(this.props.code?.codeUri ?? './src');
             body.withFuncCode(new FuncCode().withFile(zipFile));
         }
-        log.verbose(`Creating function [${this.props.functionName}].`);
-        log.verbose("------------create body-------------");
-        log.verbose(JSON.stringify(body));
+        Logger.getIns().spinStart(`Creating function [${this.props.name}].`);
+        Logger.getIns().debug("------------create body-------------");
+        Logger.getIns().debug(JSON.stringify(body));
         try {
             const result: any = await this.client.createFunction(
                 new CreateFunctionRequest().withBody(body)
@@ -299,12 +297,14 @@ export class FunctionService {
                 this.props.enableDynamicMemory
             ) {
                 this.updateConfig(result);
+            } else {
+                await this.createTags(this.props);
             }
-            log.verbose(`Function [${this.props.functionName}] created.`);
+            Logger.getIns().spinSuccess(`Function [${this.props.name}] created.`);
             return result;
         } catch (error) {
-            log.error(
-                `Create function [${this.props.functionName}] failed. err=${(error as Error).message
+            Logger.getIns().spinError(
+                `Create function [${this.props.name}] failed. err=${(error as Error).message
                 }`
             );
             throw error;
@@ -330,9 +330,7 @@ export class FunctionService {
     private async updateCode(
         config: IFunctionResult
     ) {
-        log.verbose(
-            `Updating the code of function [${this.props.name}].`
-        );
+        Logger.getIns().spinStart(`Updating the code of function[${this.props.name}].`);
         try {
             const body = new UpdateFunctionCodeRequestBody()
                 .withCodeType(
@@ -347,7 +345,7 @@ export class FunctionService {
                 body.withCodeUrl(this.props.codeUrl);
             } else {
                 const zipFile = await startZip(this.props.code?.codeUri ?? './src');
-                log.verbose("File compression completed");
+                Logger.getIns().debug("File compression completed");
                 body.withFuncCode(new FuncCode().withFile(zipFile));
             }
 
@@ -357,18 +355,16 @@ export class FunctionService {
                     .withFunctionUrn(config.func_urn)
             );
             handlerResponse(result);
-            log.verbose(
-                `Code of function [${this.props.functionName}] updated.`
-            );
+            Logger.getIns().spinSuccess(`Code of function[${this.props.name}] updated.`);
         } catch (error) {
-            log.verbose(
+            Logger.getIns().debug(
                 `error -> ${error.errorCode}`
             );
             if (error.errorCode === 'FSS.0409') {
                 return;
             }
-            log.error(
-                `Update code of function [${this.props.functionName}] failed. err=${(error as Error).message
+            Logger.getIns().spinError(
+                `Update code of function[${this.props.name}] failed. err=${(error as Error).message
                 }`
             );
             throw error;
@@ -384,24 +380,21 @@ export class FunctionService {
     private async updateConfig(
         config: IFunctionResult
     ) {
-        log.notice(
-            `Updating configurations of function [${this.props.functionName}].`
-        );
+        Logger.getIns().spinStart(`Updating configurations of function[${this.props.name}].`);
         try {
+            await this.createTags(this.props);
             const body = this.getConfigRequestBody(this.props, config);
-            log.verbose("------------update body-----------");
-            log.verbose(JSON.stringify(body));
+            Logger.getIns().debug("------------update body-----------");
+            Logger.getIns().debug(JSON.stringify(body));
             const request = new UpdateFunctionConfigRequest()
                 .withFunctionUrn(this.functionUrn)
                 .withBody(body);
-            const result: any = this.client.updateFunctionConfig(request);
+            const result: any = await this.client.updateFunctionConfig(request);
             handlerResponse(result);
-            log.verbose(
-                `Configurations of function [${this.props.functionName}] updated.`
-            );
+            Logger.getIns().spinSuccess(`Configurations of function[${this.props.name}] updated.`);
         } catch (error) {
-            log.error(
-                `Update configurations of function [${this.props.functionName
+            Logger.getIns().spinError(
+                `Update configurations of function [${this.props.name
                 }] failed. err=${(error as Error).message}`
             );
             throw error;
@@ -552,7 +545,7 @@ export class FunctionService {
                 body.withEncryptedUserData(JSON.stringify(newData.encryptedUserData));
             }
         } catch (error) {
-            log.error(error);
+            Logger.getIns().error(error);
         }
     }
 
@@ -621,5 +614,69 @@ export class FunctionService {
         body.withInitializerTimeout(
             newData?.initializerTimeout ?? oldData?.initializer_timeout
         );
+    }
+
+    private async createTags(props: any) {
+        try {
+            const kvItems = await this.handlerTags(props);
+            Logger.getIns().debug(`create tags [${JSON.stringify(kvItems)}].`);
+            if (kvItems.length === 0) {
+                return;
+            }
+            const req = new CreateTagsRequest();
+            req.withResourceType("functions");
+            req.withResourceId(props.urn);
+            const body = new UpdateFunctionTagsRequestBody();
+            body.withAction("create");
+            body.withTags(kvItems);
+            req.withBody(body);
+            await this.client.createTags(req);
+        } catch (error) {
+            Logger.getIns().debug('Create tags failed.' + JSON.stringify(error));
+            return;
+        }
+    }
+
+    private async getTags(urn: string, client: FunctionGraphClient) {
+        const req = new ListFunctionTagsRequest();
+        req.withResourceType("functions");
+        req.withResourceId(urn);
+        return client.listFunctionTags(req);
+    }
+
+    private async deleteTags(
+        urn: string,
+        tags: KvItem[],
+    ) {
+        Logger.getIns().debug(`delete tags [${JSON.stringify(tags)}].`);
+        if (tags.length === 0) {
+            return;
+        }
+        const req = new DeleteTagsRequest();
+        req.withResourceType("functions");
+        req.withResourceId(urn);
+        const body = new UpdateFunctionTagsRequestBody();
+        body.withAction("delete");
+        body.withTags(tags);
+        req.withBody(body);
+        return this.client.deleteTags(req);
+    }
+
+    private async handlerTags(props: any): Promise<Array<KvItem>> {
+        let propTags = this.props.tags ?? {};
+        const isMerge = this.props.tagPolicy?.toLocaleLowerCase() === 'merge';
+        const { tags = [] } = await this.getTags(props.urn, this.client);
+        Logger.getIns().debug(`get tags [${JSON.stringify(tags)}].`);
+        if (tags.length > 0) { // 如果标签存在，先删除
+            await this.deleteTags(this.functionUrn, tags);
+        }
+        if (isMerge) {
+            // 获取已有标签并用配置的覆盖
+            tags.filter(({ key }) => !propTags[key]).forEach(({ key, value }) => {
+                propTags[key] = value;
+            });
+        }
+
+        return Object.keys(propTags).map(key => new KvItem().withKey(key).withValue(propTags[key]));
     }
 }

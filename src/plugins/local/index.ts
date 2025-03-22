@@ -1,13 +1,13 @@
 import Serverless, { Options } from "serverless";
-import {log} from '@serverless/utils/log';
-import { BasePlugin } from '../basePlugin';
-import { extendFunctionInfos } from "../../utils/util";
 import _ from "lodash";
+import path from "path";
+import { exec } from "child_process";
+import { extendFunctionInfos, Logger } from "serverless-fgs-sdk";
+import { BasePlugin } from '../basePlugin';
 import { PortService } from "../../services/port.service";
 import { ApiService } from "../../services/api.service";
 import { IFunctionConfig } from "../../models/interface";
-import path from "path";
-import { exec } from "child_process";
+
 export class LocalPlugin extends BasePlugin {
     private apiService: ApiService;
 
@@ -23,7 +23,7 @@ export class LocalPlugin extends BasePlugin {
         try {
             await this.invoke();
         } catch (error) {
-            log.error('Local error.' + (error as Error).message);
+            Logger.getIns().error('Local error.' + (error as Error).message);
         }
     }
 
@@ -36,13 +36,13 @@ export class LocalPlugin extends BasePlugin {
         if (_.isEmpty(functionObj)) {
             throw new Error(`Please add function [${this.options.function}] config in your serverless.yml/yaml and retry start.`);
         }
-        log.verbose('options -> ' + JSON.stringify(this.options, null, 4));
-        log.verbose('functionConfig -> ' + JSON.stringify(functionConfig, null, 4));
+        Logger.getIns().debug('options -> ' + JSON.stringify(this.options, null, 4));
+        Logger.getIns().debug('functionConfig -> ' + JSON.stringify(functionConfig, null, 4));
         await this.setPort(functionConfig.name);
         const port = await PortService.getInstance().getPort(functionConfig.name);
         try {
             const result = await this.handlerNormal(functionConfig, port);
-            log.notice(`result: ${JSON.stringify(result, null, 4)}`);
+            Logger.getIns().info(`result: ${JSON.stringify(result, null, 4)}`);
         } catch (error) {
             await this.apiService.stopProcess(port);
             throw error;
@@ -66,7 +66,7 @@ export class LocalPlugin extends BasePlugin {
             entry,
             handler,
         };
-        log.verbose(`handlerEnvs -> ${JSON.stringify(envs)}`);
+        Logger.getIns().debug(`handlerEnvs -> ${JSON.stringify(envs)}`);
         return Buffer.from(JSON.stringify(envs), 'utf-8').toString('base64');
     }
 
@@ -81,10 +81,10 @@ export class LocalPlugin extends BasePlugin {
     }
 
     private async startExpress(functions: IFunctionConfig, port: number, isDebug = false): Promise<boolean> {
-        log.verbose('startExpress port -> ' + port);
+        Logger.getIns().debug('startExpress port -> ' + port);
         const envs = this.handlerEnvsVars(functions);
         const command = `node ${path.join(__dirname, 'app.js')} ${port} ${envs}`;
-        log.verbose('stat command: ' + command);
+        Logger.getIns().debug('stat command: ' + command);
         exec(command.split('\\').join('/'));
         const result = await this.apiService.checkContainer(port, isDebug);
         if (result) {

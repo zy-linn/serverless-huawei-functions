@@ -1,6 +1,6 @@
 {
   "name": "serverless-huawei-functions",
-  "version": "0.0.5",
+  "version": "0.0.10",
   "description": "Provider plugin for the Serverless Framework which adds support for Huawei Cloud Functions.",
   "autoInstall": false,
   "homepage": "hhttps://github.com/zy-linn/serverless-huawei-functions.git",
@@ -31,15 +31,11 @@
     "postbuild": "node resources/copy.js"
   },
   "dependencies": {
-    "@huaweicloud/huaweicloud-sdk-core": "^3.1.18",
-    "@huaweicloud/huaweicloud-sdk-functiongraph": "^3.1.18",
-    "@huaweicloud/huaweicloud-sdk-iam": "^3.1.18",
-    "@serverless/utils": "^6.8.2",
     "axios": "^1.6.7",
-    "compressing": "^1.6.3",
+    "chalk": "^4.1.2",
     "ini": "^3.0.1",
-    "lodash": "^4.17.21",
-    "serverless": "^3.27.0"
+    "serverless": "^3.27.0",
+    "serverless-fgs-sdk": "0.0.3"
   },
   "devDependencies": {
     "@types/node": "^14.0.23",
@@ -48,5 +44,14 @@
     "rimraf": "^3.0.2",
     "ts-node": "^8.10.2",
     "typescript": "^4.4.2"
-  }
+  },
+  "overrides": {
+    "chalk": "^4.1.2"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ]
 }
