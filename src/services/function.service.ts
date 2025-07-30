@@ -349,6 +349,9 @@ export class FunctionService {
                 body.withFuncCode(new FuncCode().withFile(zipFile));
             }
 
+            Logger.getIns().debug("------------updateCode body-----------");
+            Logger.getIns().debug(JSON.stringify(body));
+
             const result: any = await this.client.updateFunctionCode(
                 new UpdateFunctionCodeRequest()
                     .withBody(body)
@@ -585,16 +588,18 @@ export class FunctionService {
         if (
             !(newData?.ltsGroupId ?? oldData?.log_group_id) ||
             !(newData?.ltsStreamId ?? oldData?.log_stream_id) ||
-            !newData?.ltsStreamName
+            !newData?.ltsStreamName || newData.enableLtsLog === false
         ) {
             return;
         }
+
         const conf = new FuncLogConfig();
         conf.withGroupId(newData?.ltsGroupId ?? oldData?.log_group_id);
         conf.withGroupName(newData?.ltsGroupName);
         conf.withStreamId(newData?.ltsStreamId ?? oldData?.log_stream_id);
         conf.withStreamName(newData?.ltsStreamName);
-        body.withLogConfig(conf);
+        body.withEnableLtsLog(true);
+        body.withLogConfig(conf); 
     }
 
     /**

@@ -179,6 +179,7 @@ export interface LogConfig {
     ltsStreamId?: string;
     ltsGroupName?: string;
     ltsStreamName: string; // 当前SDK需要此值存在
+    enableLtsLog?: boolean;
 }
 
 export interface AdvancedConfig {

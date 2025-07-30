@@ -12,12 +12,16 @@
 - [DEDICATEDGATEWAY(APIG专享版)](#apig-触发器)
 - [OBS](#obs-触发器)
 - [KAFKA](#kafka-触发器)
+- [RabbitMQ](#rabbitmq-触发器)
 - [SMN](#smn-触发器)
 - [LTS](#lts-触发器)
 - [CTS](#cts-触发器)
 - [DIS](#dis-触发器)
+- [DDS](#dds-触发器)
+
 
 ### TIMER 触发器
+[参考文档](https://support.huaweicloud.com/usermanual-functiongraph/functiongraph_01_0207.html)
 
 | 参数名         | 必填  | 类型    | 参数描述                                            |
 | -------------- | ----- | ------- | --------------------------------------------------- |
@@ -48,12 +52,13 @@ events:
         userEvent: xxxx
 ```
 
-### APIG 触发器
+### DEDICATEDGATEWAY 触发器
+[参考文档](https://support.huaweicloud.com/usermanual-functiongraph/functiongraph_01_0204.html)
 
 | 参数名            | 必填 | 类型              | 参数描述                    |
 | ----------------- | ---- | ----------------- | --------------------------------------------- |
 | name              | False | String            | API名称，默认使用函数名             |
-| instanceId              | False | String            | API实例ID，**专项版必填**             |
+| instanceId              | TRUE | String            | API实例ID，**专项版必填**             |
 | envName           | False | String          | API的发布环境，默认为 `RELEASE`                    |
 | envId           | False | String          | API的发布环境id，默认为 `DEFAULT_ENVIRONMENT_RELEASE_ID`                    |
 | protocol           | False | Enum     | 请求协议，取值为`HTTP`、`HTTPS`， 默认为 `HTTPS`                    |
@@ -87,7 +92,7 @@ API认证方式：
 
 ```yaml
 events:
-  - triggerTypeCode: APIG
+  - triggerTypeCode: DEDICATEDGATEWAY
     status: ACTIVE
     eventData:
         name: APIG_test
@@ -96,7 +101,7 @@ events:
         envId: DEFAULT_ENVIRONMENT_RELEASE_ID
         protocol: HTTPS
         groupId: groupId
-        slDomain: groupId.apig.region.huaweicloudapis.com
+        slDomain: groupId.apic.region.huaweicloudapis.com
         reqMethod: GET
         matchMode: SWA
         auth: IAM

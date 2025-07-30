@@ -34,17 +34,14 @@ export class PluginService {
 
     async remove() {
         const { subCommand, events } = this.props;
-        if (['all', 'function'].includes(subCommand)) {
-            await this.functionService.remove();
-        }
-        if (['all', 'trigger'].includes(subCommand)) {
-            if (subCommand === 'all' && events.length === 0) {
-                return;
-            }
+        if (['all', 'trigger'].includes(subCommand) && events.length > 0) {
             for (let i = 0;i < events.length; i++) {
                 this.triggerService.init(events[i]);
                 await this.triggerService.remove();
             }
+        }
+        if (['all', 'function'].includes(subCommand)) {
+            await this.functionService.remove();
         }
     }
 
